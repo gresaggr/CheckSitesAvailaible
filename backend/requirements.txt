@@ -1,0 +1,18 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+asyncpg
+pydantic[email]
+pydantic-settings
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.1.2  # Явно указываем версию bcrypt
+
+python-multipart
+pyrogram
+TgCrypto
+aiofiles
+python-dotenv
+httpx
+uvicorn

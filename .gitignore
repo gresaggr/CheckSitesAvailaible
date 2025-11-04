@@ -1,0 +1,91 @@
+prompt.txt
+README__.md
+# Python
+.venv
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+cover/
+
+# Logs
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Docker
+.dockerignore
+
+# Project specific
+/downloads/*
+!/downloads/.gitkeep
+/templates/boot_index.html
+/users.sqlite
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Environment variables
+.env.local
+.env.production
+
+# Alembic
+alembic/versions/*.pyc
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Editor backups
+*.bak
+*.tmp

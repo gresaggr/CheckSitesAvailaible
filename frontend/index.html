@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+    <!-- Loading State -->
+    <div v-if="isLoading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Auth Components -->
+    <login-component
+            v-if="!isAuthenticated && !showRegister && !isLoading"
+            @login="handleLogin"
+            @switch-to-register="showRegister = true"
+            :error="error"
+            :loading="loading"
+    ></login-component>
+
+    <register-component
+            v-if="!isAuthenticated && showRegister && !isLoading"
+            @register="handleRegister"
+            @switch-to-login="showRegister = false"
+            :error="error"
+            :loading="loading"
+    ></register-component>
+
+    <!-- Dashboard -->
+    <dashboard-component
+            v-if="isAuthenticated && !isLoading"
+            :user="user"
+            :websites="websites"
+            @logout="handleLogout"
+            @add-website="handleAddWebsite"
+            @edit-website="handleEditWebsite"
+            @delete-website="handleDeleteWebsite"
+            @reload-websites="loadWebsites"
+    ></dashboard-component>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/components/login.js"></script>
+<script src="js/components/register.js"></script>
+<script src="js/components/dashboard.js"></script>
+<script src="js/components/website-list.js"></script>
+<script src="js/components/website-modal.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
