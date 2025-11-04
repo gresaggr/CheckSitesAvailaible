@@ -681,3 +681,36 @@ body {
         justify-content: flex-end;
     }
 }
+/* Website List */
+.website-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.website-title {
+    font-size: 28px;
+    color: #1a202c;
+    font-weight: 700;
+    margin: 0;
+}
+
+.btn-add-website {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: auto !important;
+    padding: 12px 24px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Убедимся, что кнопка видима */
+.website-header .btn-primary {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}

@@ -6,20 +6,29 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     postgresql-client \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy requirements first for better caching
 COPY backend/requirements.txt ./backend/
-RUN pip install --no-cache-dir -r backend/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r backend/requirements.txt
 
+# Copy application code
 COPY backend ./backend
 
+# Create necessary directories
+RUN mkdir -p /app/logs /app/backend/sessions
 
-# Create logs directory
-RUN mkdir -p /app/logs
+# Set Python path
+ENV PYTHONPATH=/app/backend
 
 # Expose port
 EXPOSE 8000
 
-# Run migrations and start server
-#CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Default command (can be overridden in docker-compose)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

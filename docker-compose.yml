@@ -13,19 +13,38 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - monitor_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: website_monitor_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitor_network
 
   backend:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
     container_name: website_monitor_backend
-#    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./backend:/app/backend
+      - ./logs:/app/logs
     ports:
       - "8000:8000"
     environment:
@@ -34,10 +53,108 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-website_monitor}
       - POSTGRES_HOST=postgres
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - monitor_network
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: website_monitor_celery_worker
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=4
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-website_monitor}
+      - POSTGRES_HOST=postgres
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - monitor_network
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: website_monitor_celery_beat
+    command: celery -A app.core.celery_app beat --loglevel=info
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-website_monitor}
+      - POSTGRES_HOST=postgres
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - monitor_network
+
+  flower:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: website_monitor_flower
+    command: celery -A app.core.celery_app flower --port=5555 --basic-auth=admin:secure_password_here
+    ports:
+      - "5555:5555"
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+    networks:
+      - monitor_network
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
 
   frontend:
     image: nginx:alpine
@@ -47,6 +164,13 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
+    networks:
+      - monitor_network
 
 volumes:
   postgres_data:
+  redis_data:
+
+networks:
+  monitor_network:
+    driver: bridge

@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import ClassVar
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -31,6 +30,27 @@ class Settings(BaseSettings):
 
     # Logging
     LOG_LEVEL: str = "INFO"
+
+    # Celery
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
+    @property
+    def CELERY_BROKER_URL(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    @property
+    def CELERY_RESULT_BACKEND(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    # Telegram Bot
+    TELEGRAM_BOT_TOKEN: str = ""  # Токен бота для уведомлений
+
+    # Monitoring defaults
+    DEFAULT_CHECK_INTERVAL: int = 300  # 5 минут
+    DEFAULT_TIMEOUT: int = 30  # 30 секунд
+    MAX_CONCURRENT_CHECKS: int = 100  # Максимум одновременных проверок
 
     env_path: ClassVar[str] = str(Path(__file__).parent.parent.parent.parent / ".env")
     model_config = SettingsConfigDict(

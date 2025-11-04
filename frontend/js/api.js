@@ -28,7 +28,7 @@ const api = {
 
     // Auth
     async login(email, password) {
-        return this.call('/auth/login', {
+        return this.call('/auth/login/', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
             skipAuth: true
@@ -36,7 +36,7 @@ const api = {
     },
 
     async register(email, username, password) {
-        return this.call('/auth/register', {
+        return this.call('/auth/register/', {
             method: 'POST',
             body: JSON.stringify({ email, username, password }),
             skipAuth: true
@@ -49,11 +49,11 @@ const api = {
 
     // Websites
     async getWebsites() {
-        return this.call('/websites');
+        return this.call('/websites/');
     },
 
     async createWebsite(data) {
-        return this.call('/websites', {
+        return this.call('/websites/', {
             method: 'POST',
             body: JSON.stringify(data)
         });
@@ -70,5 +70,31 @@ const api = {
         return this.call(`/websites/${id}`, {
             method: 'DELETE'
         });
+    },
+
+    async stopWebsite(id) {
+        return this.call(`/websites/${id}/stop`, {
+            method: 'POST'
+        });
+    },
+
+    async startWebsite(id) {
+        return this.call(`/websites/${id}/start`, {
+            method: 'POST'
+        });
+    },
+
+    async checkWebsiteNow(id) {
+        return this.call(`/websites/${id}/check-now`, {
+            method: 'POST'
+        });
+    },
+
+    async getWebsiteStats(id) {
+        return this.call(`/websites/${id}/stats`);
+    },
+
+    async getWebsiteHistory(id, limit = 100) {
+        return this.call(`/websites/${id}/history?limit=${limit}`);
     }
 };

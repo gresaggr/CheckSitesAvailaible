@@ -1,18 +1,32 @@
+# FastAPI and server
 fastapi
 uvicorn[standard]
+
+# Database
 sqlalchemy
 alembic
 asyncpg
+
+# Data validation
 pydantic[email]
 pydantic-settings
+
+# Authentication
 python-jose[cryptography]
 passlib[bcrypt]
-bcrypt==4.1.2  # Явно указываем версию bcrypt
+bcrypt==4.1.2
 
-python-multipart
-pyrogram
-TgCrypto
-aiofiles
-python-dotenv
+# HTTP client
 httpx
-uvicorn
+
+# Celery and Redis
+celery[redis]
+redis
+
+# Utils
+python-multipart
+python-dotenv
+aiofiles
+
+# Optional: Flower for Celery monitoring
+# flower==2.0.1

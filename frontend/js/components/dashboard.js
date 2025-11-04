@@ -58,8 +58,8 @@ const DashboardComponent = {
                     <div class="stat-card">
                         <div class="stat-header">
                             <div>
-                                <div class="stat-label">Offline</div>
-                                <div class="stat-value">{{ offlineCount }}</div>
+                                <div class="stat-label">Issues</div>
+                                <div class="stat-value">{{ issuesCount }}</div>
                             </div>
                             <div class="stat-icon" style="background: #fed7d7;">
                                 <svg viewBox="0 0 24 24" fill="#c53030">
@@ -76,6 +76,10 @@ const DashboardComponent = {
                     @add="showAddModal = true"
                     @edit="handleEdit"
                     @delete="handleDelete"
+                    @stop="handleStop"
+                    @start="handleStart"
+                    @check-now="handleCheckNow"
+                    @stats="handleShowStats"
                 ></website-list-component>
 
                 <!-- Add/Edit Modal -->
@@ -86,6 +90,13 @@ const DashboardComponent = {
                     @close="closeModals"
                     @save="handleSave"
                 ></website-modal-component>
+
+                <!-- Stats Modal -->
+                <stats-modal-component
+                    v-if="showStatsModal"
+                    :website="statsWebsite"
+                    @close="showStatsModal = false"
+                ></stats-modal-component>
             </div>
         </div>
     `,
@@ -94,15 +105,19 @@ const DashboardComponent = {
         return {
             showAddModal: false,
             showEditModal: false,
-            editingWebsite: null
+            showStatsModal: false,
+            editingWebsite: null,
+            statsWebsite: null
         };
     },
     computed: {
         onlineCount() {
             return this.websites.filter(w => w.status === 'online').length;
         },
-        offlineCount() {
-            return this.websites.filter(w => w.status === 'offline').length;
+        issuesCount() {
+            return this.websites.filter(w =>
+                w.status === 'offline' || w.status === 'error' || w.consecutive_failures > 0
+            ).length;
         }
     },
     methods: {
@@ -110,10 +125,25 @@ const DashboardComponent = {
             this.editingWebsite = { ...website };
             this.showEditModal = true;
         },
-        handleDelete(websiteId) {
+        async handleDelete(websiteId) {
             if (confirm('Are you sure you want to delete this website?')) {
                 this.$emit('delete-website', websiteId);
             }
+        },
+        async handleStop(websiteId) {
+            if (confirm('Stop monitoring this website?')) {
+                this.$emit('stop-website', websiteId);
+            }
+        },
+        async handleStart(websiteId) {
+            this.$emit('start-website', websiteId);
+        },
+        async handleCheckNow(websiteId) {
+            this.$emit('check-website', websiteId);
+        },
+        handleShowStats(website) {
+            this.statsWebsite = website;
+            this.showStatsModal = true;
         },
         closeModals() {
             this.showAddModal = false;

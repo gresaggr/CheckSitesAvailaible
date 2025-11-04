@@ -2,8 +2,11 @@ const WebsiteListComponent = {
     template: `
         <div>
             <div class="website-header">
-                <h2 style="font-size: 28px; color: #1a202c; font-weight: 700;">Monitored Websites</h2>
-                <button @click="$emit('add')" class="btn btn-primary" style="width: auto; padding: 12px 24px;">
+                <h2 class="website-title">Monitored Websites</h2>
+                <button @click="$emit('add')" class="btn btn-primary btn-add-website">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; margin-right: 8px;">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
                     Add Website
                 </button>
             </div>
@@ -44,6 +47,9 @@ const WebsiteListComponent = {
                                 <span v-if="website.response_time" class="meta-item">
                                     Response: {{ website.response_time }}ms
                                 </span>
+                                <span v-if="website.last_check" class="meta-item">
+                                    Last check: {{ formatDate(website.last_check) }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -63,5 +69,73 @@ const WebsiteListComponent = {
             </div>
         </div>
     `,
-    props: ['websites']
+    props: ['websites'],
+
+    methods: {
+        formatDate(dateString) {
+            if (!dateString) return 'Never';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+
+            // Less than 1 minute
+            if (diff < 60000) {
+                return 'Just now';
+            }
+
+            // Less than 1 hour
+            if (diff < 3600000) {
+                const minutes = Math.floor(diff / 60000);
+                return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            }
+
+            // Less than 1 day
+            if (diff < 86400000) {
+                const hours = Math.floor(diff / 3600000);
+                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            }
+
+            // More than 1 day
+            const days = Math.floor(diff / 86400000);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        },
+
+        formatInterval(seconds) {
+            if (!seconds) return 'N/A';
+
+            if (seconds < 60) {
+                return `${seconds}s`;
+            }
+
+            if (seconds < 3600) {
+                const minutes = Math.floor(seconds / 60);
+                return `${minutes}m`;
+            }
+
+            const hours = Math.floor(seconds / 3600);
+            return `${hours}h`;
+        },
+
+        calculateUptime(website) {
+            // Placeholder for uptime calculation
+            // This would require historical data from backend
+            if (website.status === 'online') {
+                return '99.9%';
+            } else if (website.status === 'offline') {
+                return '0%';
+            }
+            return 'N/A';
+        },
+
+        getStatusColor(status) {
+            const colors = {
+                online: '#48bb78',
+                offline: '#f56565',
+                pending: '#ed8936',
+                error: '#f56565'
+            };
+            // return colors[status] || '#a0aec0';
+            return colors[status] || '#a0aecf';
+        }
+    }
 };
