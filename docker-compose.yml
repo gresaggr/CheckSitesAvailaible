@@ -119,35 +119,27 @@ services:
     networks:
       - monitor_network
 
-  flower:
-    build:
-      context: .
-      dockerfile: ./backend/Dockerfile
-    container_name: website_monitor_flower
-    command: celery -A app.core.celery_app flower --port=5555 --basic-auth=admin:secure_password_here
-    ports:
-      - "5555:5555"
-    environment:
-      - REDIS_HOST=redis
-      - POSTGRES_HOST=postgres
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - SECRET_KEY=${SECRET_KEY}
-    depends_on:
-      - redis
-      - postgres
-    restart: unless-stopped
-    networks:
-      - monitor_network
-
-  prometheus:
-    image: prom/prometheus
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    ports:
-      - "9090:9090"
+#  flower:
+#    build:
+#      context: .
+#      dockerfile: ./backend/Dockerfile
+#    container_name: website_monitor_flower
+#    command: celery -A app.core.celery_app flower --port=5555 --basic-auth=admin:secure_password_here
+#    ports:
+#      - "5555:5555"
+#    environment:
+#      - REDIS_HOST=redis
+#      - POSTGRES_HOST=postgres
+#      - POSTGRES_USER=${POSTGRES_USER}
+#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+#      - POSTGRES_DB=${POSTGRES_DB}
+#      - SECRET_KEY=${SECRET_KEY}
+#    depends_on:
+#      - redis
+#      - postgres
+#    restart: unless-stopped
+#    networks:
+#      - monitor_network
 
   grafana:
     image: grafana/grafana
@@ -170,6 +162,8 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  grafana_data:
+
 
 networks:
   monitor_network:

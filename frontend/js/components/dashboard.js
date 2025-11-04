@@ -1,4 +1,9 @@
 const DashboardComponent = {
+    components: {
+        'website-list-component': WebsiteListComponent,
+        'website-modal-component': WebsiteModalComponent,
+        'stats-modal-component': StatsModalComponent
+    },
     template: `
         <div class="dashboard">
             <div class="header">
@@ -122,7 +127,7 @@ const DashboardComponent = {
     },
     methods: {
         handleEdit(website) {
-            this.editingWebsite = { ...website };
+            this.editingWebsite = {...website};
             this.showEditModal = true;
         },
         async handleDelete(websiteId) {

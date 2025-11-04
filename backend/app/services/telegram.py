@@ -60,10 +60,11 @@ async def validate_telegram_chat_id(chat_id: str) -> bool:
         return False
 
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/getChat"
-
+    if chat_id.startswith("100"):
+        chat_id = f'-{chat_id}'
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.post(url, json={"chat_id": chat_id})
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.get(url, params={"chat_id": chat_id})
             response.raise_for_status()
             return True
 
