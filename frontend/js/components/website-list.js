@@ -38,8 +38,8 @@ const WebsiteListComponent = {
                            <div class="website-meta">
                                 <span class="meta-item">
                                     Status: 
-                                    <span class="status-badge" :class="'status-' + website.status">
-                                        {{ website.status }}
+                                    <span class="status-badge" :class="'status-' + getDisplayStatus(website)">
+                                        {{ getDisplayStatus(website) }}
                                     </span>
                                 </span>
                                 <span class="meta-item">
@@ -51,10 +51,10 @@ const WebsiteListComponent = {
                                 <span class="meta-item">Timeout: {{ website.timeout }}s</span>
                                 <span class="meta-item">Valid word: "{{ website.valid_word }}"</span>
                                 <span class="meta-item">Failure threshold: {{ website.failure_threshold || 3 }}</span>
-                                <span v-if="website.response_time" class="meta-item">
-                                    Response: {{ website.response_time }}ms
+                                <span v-if="website.response_time && website.is_active" class="meta-item">
+                                    Response time: {{ website.response_time }}ms
                                 </span>
-                                <span v-if="website.last_check" class="meta-item">
+                                <span v-if="website.last_check && website.is_active" class="meta-item">
                                     Last check: {{ formatDate(website.last_check) }}
                                 </span>
                             </div>
@@ -79,6 +79,14 @@ const WebsiteListComponent = {
     props: ['websites'],
 
     methods: {
+        // Возвращает статус для отображения (N/A если мониторинг остановлен)
+        getDisplayStatus(website) {
+            if (!website.is_active || website.status === 'stopped') {
+                return 'N/A';
+            }
+            return website.status;
+        },
+
         formatDate(dateString) {
             if (!dateString) return 'Never';
             const date = new Date(dateString);
@@ -139,10 +147,10 @@ const WebsiteListComponent = {
                 online: '#48bb78',
                 offline: '#f56565',
                 pending: '#ed8936',
-                error: '#f56565'
+                error: '#f56565',
+                'N/A': '#a0aec0'
             };
-            // return colors[status] || '#a0aec0';
-            return colors[status] || '#a0aecf';
+            return colors[status] || '#a0aec0';
         }
     }
 };

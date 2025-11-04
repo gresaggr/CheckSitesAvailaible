@@ -18,9 +18,16 @@ celery_app.conf.update(
     task_track_started=True,
     task_time_limit=300,
     task_soft_time_limit=240,
-    worker_prefetch_multiplier=4,
-    worker_max_tasks_per_child=1000,
+    worker_prefetch_multiplier=1,  # Уменьшено для избежания проблем с пулом
+    worker_max_tasks_per_child=100,  # Уменьшено для перезапуска воркеров
     broker_connection_retry_on_startup=True,
+    broker_pool_limit=None,  # Отключаем лимит пула брокера
+    result_backend_transport_options={
+        'master_name': 'mymaster',
+    },
+    # Настройки для лучшей работы с async
+    worker_pool='prefork',  # Используем prefork для изоляции
+    worker_concurrency=2,  # Ограничиваем количество воркеров
 )
 
 # Динамическое расписание для мониторинга

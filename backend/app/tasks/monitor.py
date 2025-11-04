@@ -24,28 +24,35 @@ def check_all_websites():
 async def _check_all_websites():
     """Async implementation"""
     async with async_session_maker() as db:
-        now = datetime.now(timezone.utc)
+        try:
+            now = datetime.now(timezone.utc)
 
-        # Находим все активные сайты, которые нужно проверить
-        query = select(Website).where(
-            Website.is_active == True,
-            Website.status != "stopped"
-        )
-        result = await db.execute(query)
-        websites = result.scalars().all()
+            # Находим все активные сайты, которые нужно проверить
+            query = select(Website).where(
+                Website.is_active == True,
+                Website.status != "stopped"
+            )
+            result = await db.execute(query)
+            websites = result.scalars().all()
 
-        tasks = []
-        for website in websites:
-            if website.last_check is None:
-                should_check = True
-            else:
-                time_since_check = (now - website.last_check).total_seconds()
-                should_check = time_since_check >= website.check_interval
+            tasks = []
+            for website in websites:
+                if website.last_check is None:
+                    should_check = True
+                else:
+                    time_since_check = (now - website.last_check).total_seconds()
+                    should_check = time_since_check >= website.check_interval
 
-            if should_check:
-                tasks.append(check_website.delay(website.id))
+                if should_check:
+                    tasks.append(check_website.delay(website.id))
 
-        logger.info(f"Scheduled {len(tasks)} website checks")
+            logger.info(f"Scheduled {len(tasks)} website checks")
+        except Exception as e:
+            logger.error(f"Error in check_all_websites: {e}")
+            raise
+        finally:
+            # Явно закрываем сессию
+            await db.close()
 
 
 @celery_app.task(name="app.tasks.monitor.check_website", bind=True, max_retries=3)
@@ -61,80 +68,87 @@ def check_website(self, website_id: int):
 async def _check_website(website_id: int):
     """Async implementation of website check"""
     async with async_session_maker() as db:
-        # Получаем сайт
-        result = await db.execute(
-            select(Website).where(Website.id == website_id)
-        )
-        website = result.scalar_one_or_none()
-
-        if not website or not website.is_active:
-            return
-
-        logger.info(f'Checking website: {website.url} with "{website.valid_word}"')
-
-        status = "offline"
-        response_time = None
-        status_code = None
-        error_message = None
-
-        start_time = datetime.now(timezone.utc)
         try:
-            # async with httpx.AsyncClient(timeout=website.timeout, headers=settings.USER_AGENT) as client:
-            async with httpx.AsyncClient(timeout=website.timeout) as client:
-                response = await client.get(website.url, follow_redirects=True)
-                logger.info(f'Checking website: {website.url} response succeed...')
-                response_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
-                status_code = response.status_code
+            # Получаем сайт
+            result = await db.execute(
+                select(Website).where(Website.id == website_id)
+            )
+            website = result.scalar_one_or_none()
 
-                # Проверяем наличие валидного слова
-                if website.valid_word in response.text:
-                    status = "online"
-                    website.consecutive_failures = 0
-                else:
-                    status = "offline"
-                    error_message = f"Valid word '{website.valid_word}' not found"
-                    website.consecutive_failures += 1
+            if not website or not website.is_active:
+                return
 
-        except httpx.TimeoutException:
-            error_message = f"Timeout after {website.timeout}s"
-            website.consecutive_failures += 1
-        except httpx.RequestError as e:
-            error_message = f"Request error: {str(e)}"
-            website.consecutive_failures += 1
+            logger.info(f'Checking website: {website.url} with "{website.valid_word}"')
+
+            status = "offline"
+            response_time = None
+            status_code = None
+            error_message = None
+
+            start_time = datetime.now(timezone.utc)
+            try:
+                async with httpx.AsyncClient(timeout=website.timeout) as client:
+                    response = await client.get(website.url, follow_redirects=True)
+                    logger.debug(f'Checking website: {website.url} response succeed...')
+                    response_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
+                    status_code = response.status_code
+
+                    # Проверяем наличие валидного слова
+                    if website.valid_word in response.text:
+                        status = "online"
+                        website.consecutive_failures = 0
+                    else:
+                        status = "offline"
+                        error_message = f"Valid word '{website.valid_word}' not found"
+                        website.consecutive_failures += 1
+
+            except httpx.TimeoutException:
+                error_message = f"Timeout after {website.timeout}s"
+                website.consecutive_failures += 1
+            except httpx.RequestError as e:
+                error_message = f"Request error: {str(e)}"
+                website.consecutive_failures += 1
+            except Exception as e:
+                error_message = f"Unknown error: {str(e)}"
+                website.consecutive_failures += 1
+
+            # Обновляем статус сайта
+            website.status = status
+            website.last_check = datetime.now(timezone.utc)
+            website.response_time = response_time
+            website.error_message = error_message
+            website.total_checks += 1
+
+            if status != "online":
+                website.failed_checks += 1
+
+            # Сохраняем историю проверки
+            check = WebsiteCheck(
+                website_id=website_id,
+                status=status,
+                response_time=response_time,
+                status_code=status_code,
+                error_message=error_message
+            )
+            db.add(check)
+
+            await db.commit()
+
+            # Отправляем уведомление при падении сайта
+            if status != "online" and website.telegram_chat_id:
+                await _send_alert_if_needed(website, db)
+
+            logger.info(
+                f"Website {website.url} check completed: "
+                f"status={status}, response_time={response_time}ms, failures={website.consecutive_failures}"
+            )
         except Exception as e:
-            error_message = f"Unknown error: {str(e)}"
-            website.consecutive_failures += 1
-
-        # Обновляем статус сайта
-        website.status = status
-        website.last_check = datetime.now(timezone.utc)
-        website.response_time = response_time
-        website.error_message = error_message
-        website.total_checks += 1
-
-        if status != "online":
-            website.failed_checks += 1
-
-        # Сохраняем историю проверки
-        check = WebsiteCheck(
-            website_id=website_id,
-            status=status,
-            response_time=response_time,
-            status_code=status_code,
-            error_message=error_message
-        )
-        db.add(check)
-
-        await db.commit()
-
-        # Отправляем уведомление при падении сайта
-        if status != "online" and website.telegram_chat_id:
-            await _send_alert_if_needed(website, db)
-
-        logger.info(
-            f"Website {website.url} check completed: "
-            f"status={status}, response_time={response_time}ms"
-        )
+            logger.error(f"Error in _check_website: {e}")
+            await db.rollback()
+            raise
+        finally:
+            # Явно закрываем сессию
+            await db.close()
 
 
 async def _send_alert_if_needed(website: Website, db: AsyncSession):
@@ -184,16 +198,24 @@ def cleanup_old_checks():
 async def _cleanup_old_checks():
     """Async implementation"""
     async with async_session_maker() as db:
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
+        try:
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
 
-        result = await db.execute(
-            delete(WebsiteCheck).where(
-                WebsiteCheck.checked_at < cutoff_date
+            result = await db.execute(
+                delete(WebsiteCheck).where(
+                    WebsiteCheck.checked_at < cutoff_date
+                )
             )
-        )
 
-        await db.commit()
-        logger.info(f"Cleaned up {result.rowcount} old check records")
+            await db.commit()
+            logger.info(f"Cleaned up {result.rowcount} old check records")
+        except Exception as e:
+            logger.error(f"Error in cleanup_old_checks: {e}")
+            await db.rollback()
+            raise
+        finally:
+            # Явно закрываем сессию
+            await db.close()
 
 
 @celery_app.task(name="app.tasks.monitor.stop_website_monitoring")
@@ -205,13 +227,21 @@ def stop_website_monitoring(website_id: int):
 async def _stop_website_monitoring(website_id: int):
     """Async implementation"""
     async with async_session_maker() as db:
-        result = await db.execute(
-            select(Website).where(Website.id == website_id)
-        )
-        website = result.scalar_one_or_none()
+        try:
+            result = await db.execute(
+                select(Website).where(Website.id == website_id)
+            )
+            website = result.scalar_one_or_none()
 
-        if website:
-            website.status = "stopped"
-            website.is_active = False
-            await db.commit()
-            logger.info(f"Stopped monitoring for website {website_id}")
+            if website:
+                website.status = "stopped"
+                website.is_active = False
+                await db.commit()
+                logger.info(f"Stopped monitoring for website {website_id}")
+        except Exception as e:
+            logger.error(f"Error in stop_website_monitoring: {e}")
+            await db.rollback()
+            raise
+        finally:
+            # Явно закрываем сессию
+            await db.close()

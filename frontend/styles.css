@@ -714,3 +714,42 @@ body {
     visibility: visible !important;
     opacity: 1 !important;
 }
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-online {
+    background: #c6f6d5;
+    color: #2f855a;
+}
+
+.status-offline {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+.status-pending {
+    background: #feebc8;
+    color: #c05621;
+}
+
+.status-error {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+.status-stopped {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+/* Добавляем стиль для N/A статуса */
+.status-N\/A {
+    background: #e2e8f0;
+    color: #718096;
+}
