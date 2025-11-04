@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from app.api.deps import get_current_user
 from app.db.session import get_async_session
-from app.models.user import User
+from app.models import User
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserLogin, UserResponse
 from app.core.security import create_access_token, verify_password, get_password_hash

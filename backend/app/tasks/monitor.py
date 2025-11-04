@@ -1,12 +1,15 @@
 import httpx
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.celery_app import celery_app
 from app.core.logger import get_logger
 from app.db.session import async_session_maker
-from app.models.website import Website, WebsiteCheck
+
+# Import all models to ensure relationships are properly resolved
+from app.models import User, Website, WebsiteCheck
+
 from app.services.telegram import send_telegram_notification
 
 logger = get_logger("tasks.monitor")
@@ -21,7 +24,7 @@ def check_all_websites():
 async def _check_all_websites():
     """Async implementation"""
     async with async_session_maker() as db:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Находим все активные сайты, которые нужно проверить
         query = select(Website).where(
@@ -33,7 +36,6 @@ async def _check_all_websites():
 
         tasks = []
         for website in websites:
-            # Проверяем, нужно ли проверять этот сайт
             if website.last_check is None:
                 should_check = True
             else:
@@ -70,7 +72,7 @@ async def _check_website(website_id: int):
 
         logger.info(f"Checking website: {website.url}")
 
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         status = "offline"
         response_time = None
         status_code = None
@@ -79,7 +81,7 @@ async def _check_website(website_id: int):
         try:
             async with httpx.AsyncClient(timeout=website.timeout) as client:
                 response = await client.get(website.url, follow_redirects=True)
-                response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+                response_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 status_code = response.status_code
 
                 # Проверяем наличие валидного слова
@@ -103,7 +105,7 @@ async def _check_website(website_id: int):
 
         # Обновляем статус сайта
         website.status = status
-        website.last_check = datetime.utcnow()
+        website.last_check = datetime.now(timezone.utc)
         website.response_time = response_time
         website.error_message = error_message
         website.total_checks += 1
@@ -144,7 +146,7 @@ async def _send_alert_if_needed(website: Website, db: AsyncSession):
             should_notify = True
         else:
             time_since_notification = (
-                    datetime.utcnow() - website.last_notification_sent
+                    datetime.now(timezone.utc) - website.last_notification_sent
             ).total_seconds()
             if time_since_notification >= 1800:  # 30 минут
                 should_notify = True
@@ -157,7 +159,7 @@ async def _send_alert_if_needed(website: Website, db: AsyncSession):
             f"*Status:* {website.status}\n"
             f"*Consecutive Failures:* {website.consecutive_failures}\n"
             f"*Error:* {website.error_message or 'Unknown'}\n"
-            f"*Time:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+            f"*Time:* {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC"
         )
 
         success = await send_telegram_notification(
@@ -166,7 +168,7 @@ async def _send_alert_if_needed(website: Website, db: AsyncSession):
         )
 
         if success:
-            website.last_notification_sent = datetime.utcnow()
+            website.last_notification_sent = datetime.now(timezone.utc)
             await db.commit()
             logger.info(f"Alert sent for website {website.id}")
 
@@ -180,7 +182,7 @@ def cleanup_old_checks():
 async def _cleanup_old_checks():
     """Async implementation"""
     async with async_session_maker() as db:
-        cutoff_date = datetime.utcnow() - timedelta(days=30)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
 
         result = await db.execute(
             delete(WebsiteCheck).where(

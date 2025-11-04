@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, func, and_
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.db.session import get_async_session
 from app.models.user import User
-from app.models.website import Website, WebsiteCheck
+from app.models import Website, WebsiteCheck
 from app.schemas.website import (
     WebsiteCreate,
     WebsiteUpdate,
@@ -301,7 +301,7 @@ async def get_website_stats(
         )
 
     # Статистика за последние 24 часа
-    last_24h = datetime.utcnow() - timedelta(hours=24)
+    last_24h = datetime.now(timezone.utc) - timedelta(hours=24)
 
     result_24h = await db.execute(
         select(
