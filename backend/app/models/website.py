@@ -20,6 +20,7 @@ class Website(Base):
     # Monitoring settings
     check_interval = Column(Integer, default=300)  # NEW: Интервал проверки в секундах (5 мин)
     is_active = Column(Boolean, default=True)
+    failure_threshold = Column(Integer, default=3)  # NEW: Количество ошибок перед уведомлением
 
     # Status
     last_check = Column(DateTime(timezone=True), nullable=True)

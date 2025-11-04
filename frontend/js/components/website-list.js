@@ -35,15 +35,22 @@ const WebsiteListComponent = {
                         <div class="website-details">
                             <div class="website-name">{{ website.name || 'Unnamed Website' }}</div>
                             <div class="website-url">{{ website.url }}</div>
-                            <div class="website-meta">
+                           <div class="website-meta">
                                 <span class="meta-item">
                                     Status: 
                                     <span class="status-badge" :class="'status-' + website.status">
                                         {{ website.status }}
                                     </span>
                                 </span>
+                                <span class="meta-item">
+                                    Monitoring: 
+                                    <span class="status-badge" :class="website.is_active ? 'status-online' : 'status-offline'">
+                                        {{ website.is_active ? 'Active' : 'Stopped' }}
+                                    </span>
+                                </span>
                                 <span class="meta-item">Timeout: {{ website.timeout }}s</span>
                                 <span class="meta-item">Valid word: "{{ website.valid_word }}"</span>
+                                <span class="meta-item">Failure threshold: {{ website.failure_threshold || 3 }}</span>
                                 <span v-if="website.response_time" class="meta-item">
                                     Response: {{ website.response_time }}ms
                                 </span>

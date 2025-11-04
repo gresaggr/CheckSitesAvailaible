@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     DEFAULT_TIMEOUT: int = 30  # 30 секунд
     MAX_CONCURRENT_CHECKS: int = 100  # Максимум одновременных проверок
 
+    USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+
     env_path: ClassVar[str] = str(Path(__file__).parent.parent.parent.parent / ".env")
     model_config = SettingsConfigDict(
         env_file=env_path,

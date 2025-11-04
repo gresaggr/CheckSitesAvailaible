@@ -10,6 +10,7 @@ class WebsiteBase(BaseModel):
     timeout: int = Field(default=30, ge=1, le=300)
     telegram_chat_id: Optional[str] = None  # NEW
     check_interval: int = Field(default=300, ge=60, le=3600)  # NEW: 1 мин - 1 час
+    failure_threshold: int = Field(default=3, ge=1, le=10)
 
 
 class WebsiteCreate(WebsiteBase):

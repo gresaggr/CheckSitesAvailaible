@@ -105,6 +105,22 @@ const WebsiteModalComponent = {
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">Failure Threshold *</label>
+                    <input
+                        v-model.number="form.failure_threshold"
+                        type="number"
+                        min="1"
+                        max="10"
+                        class="form-input"
+                        placeholder="3"
+                        required
+                    >
+                    <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
+                        Number of consecutive failures before sending notification (1-10)
+                    </small>
+                </div>
+                
                 <div v-if="isEdit" class="form-group">
                     <label class="form-label" style="display: flex; align-items: center; gap: 10px;">
                         <input
