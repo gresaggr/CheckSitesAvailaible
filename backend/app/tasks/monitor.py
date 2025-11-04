@@ -70,17 +70,19 @@ async def _check_website(website_id: int):
         if not website or not website.is_active:
             return
 
-        logger.info(f"Checking website: {website.url}")
+        logger.info(f'Checking website: {website.url} with "{website.valid_word}"')
 
-        start_time = datetime.now(timezone.utc)
         status = "offline"
         response_time = None
         status_code = None
         error_message = None
 
+        start_time = datetime.now(timezone.utc)
         try:
+            # async with httpx.AsyncClient(timeout=website.timeout, headers=settings.USER_AGENT) as client:
             async with httpx.AsyncClient(timeout=website.timeout) as client:
                 response = await client.get(website.url, follow_redirects=True)
+                logger.info(f'Checking website: {website.url} response succeed...')
                 response_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 status_code = response.status_code
 
