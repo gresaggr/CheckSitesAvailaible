@@ -28,6 +28,7 @@ class UserResponse(BaseModel):
     is_active: bool
     email: EmailStr
     username: str
+    default_telegram_chat_id: Optional[str]
     created_at: datetime
 
     class Config:
