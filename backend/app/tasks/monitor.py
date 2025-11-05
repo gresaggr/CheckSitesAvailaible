@@ -5,20 +5,32 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.celery_app import celery_app
 from app.core.logger import get_logger
-from app.db.session import async_session_maker
-
-# Import all models to ensure relationships are properly resolved
+from app.db.session import async_session_maker, engine
 from app.models import User, Website, WebsiteCheck
-
 from app.services.telegram import send_telegram_notification
 
 logger = get_logger("tasks.monitor")
 
 
+# Создаем единый event loop для всех задач Celery
+def get_or_create_eventloop():
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
+
 @celery_app.task(name="app.tasks.monitor.check_all_websites")
 def check_all_websites():
     """Проверяет все активные сайты, которые нужно проверить"""
-    asyncio.run(_check_all_websites())
+    loop = get_or_create_eventloop()
+    try:
+        loop.run_until_complete(_check_all_websites())
+    finally:
+        # Dispose engine для освобождения соединений
+        loop.run_until_complete(engine.dispose())
 
 
 async def _check_all_websites():
@@ -32,6 +44,7 @@ async def _check_all_websites():
                 Website.is_active == True,
                 Website.status != "stopped"
             )
+
             result = await db.execute(query)
             websites = result.scalars().all()
 
@@ -47,22 +60,29 @@ async def _check_all_websites():
                     tasks.append(check_website.delay(website.id))
 
             logger.info(f"Scheduled {len(tasks)} website checks")
+
         except Exception as e:
             logger.error(f"Error in check_all_websites: {e}")
             raise
         finally:
-            # Явно закрываем сессию
             await db.close()
 
 
 @celery_app.task(name="app.tasks.monitor.check_website", bind=True, max_retries=3)
 def check_website(self, website_id: int):
     """Проверяет конкретный сайт"""
+    loop = get_or_create_eventloop()
     try:
-        asyncio.run(_check_website(website_id))
+        loop.run_until_complete(_check_website(website_id))
     except Exception as exc:
         logger.error(f"Error checking website {website_id}: {exc}")
         raise self.retry(exc=exc, countdown=60)
+    finally:
+        # Dispose engine для освобождения соединений
+        try:
+            loop.run_until_complete(engine.dispose())
+        except Exception as e:
+            logger.warning(f"Error disposing engine: {e}")
 
 
 async def _check_website(website_id: int):
@@ -80,12 +100,23 @@ async def _check_website(website_id: int):
 
             logger.info(f'Checking website: {website.url} with "{website.valid_word}"')
 
+            # Сохраняем предыдущий статус для проверки восстановления
+            previous_status = website.status
+
+            # Инициализируем значения если None
+            if website.consecutive_failures is None:
+                website.consecutive_failures = 0
+            if website.total_checks is None:
+                website.total_checks = 0
+            if website.failed_checks is None:
+                website.failed_checks = 0
+
             status = "offline"
             response_time = None
             status_code = None
             error_message = None
-
             start_time = datetime.now(timezone.utc)
+
             try:
                 async with httpx.AsyncClient(timeout=website.timeout) as client:
                     response = await client.get(website.url, follow_redirects=True)
@@ -131,24 +162,51 @@ async def _check_website(website_id: int):
                 error_message=error_message
             )
             db.add(check)
-
             await db.commit()
 
+            # Проверяем восстановление сайта
+            if status == "online" and previous_status in ["offline", "error"]:
+                await _send_recovery_notification(website)
+
             # Отправляем уведомление при падении сайта
-            if status != "online" and website.telegram_chat_id:
+            elif status != "online" and website.telegram_chat_id:
                 await _send_alert_if_needed(website, db)
 
             logger.info(
                 f"Website {website.url} check completed: "
                 f"status={status}, response_time={response_time}ms, failures={website.consecutive_failures}"
             )
+
         except Exception as e:
             logger.error(f"Error in _check_website: {e}")
             await db.rollback()
             raise
         finally:
-            # Явно закрываем сессию
             await db.close()
+
+
+async def _send_recovery_notification(website: Website):
+    """Отправляет уведомление о восстановлении сайта"""
+    if not website.telegram_chat_id:
+        return
+
+    # Отправляем уведомление о восстановлении
+    message = (
+        f"✅ *Website Recovered*\n\n"
+        f"*Website:* {website.name or website.url}\\n"
+        f"*URL:* {website.url}\\n"
+        f"*Status:* {website.status}\\n"
+        f"*Response Time:* {website.response_time:.2f}ms\\n"
+        f"*Time:* {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    )
+
+    success = await send_telegram_notification(
+        website.telegram_chat_id,
+        message
+    )
+
+    if success:
+        logger.info(f"Recovery notification sent for website {website.id}")
 
 
 async def _send_alert_if_needed(website: Website, db: AsyncSession):
@@ -157,7 +215,10 @@ async def _send_alert_if_needed(website: Website, db: AsyncSession):
     # И не чаще чем раз в 30 минут
     should_notify = False
 
-    if website.consecutive_failures >= 3:
+    consecutive_failures = website.consecutive_failures or 0
+    failure_threshold = website.failure_threshold or 3
+
+    if consecutive_failures >= failure_threshold:
         if website.last_notification_sent is None:
             should_notify = True
         else:
@@ -192,7 +253,11 @@ async def _send_alert_if_needed(website: Website, db: AsyncSession):
 @celery_app.task(name="app.tasks.monitor.cleanup_old_checks")
 def cleanup_old_checks():
     """Удаляет старые записи проверок (старше 30 дней)"""
-    asyncio.run(_cleanup_old_checks())
+    loop = get_or_create_eventloop()
+    try:
+        loop.run_until_complete(_cleanup_old_checks())
+    finally:
+        loop.run_until_complete(engine.dispose())
 
 
 async def _cleanup_old_checks():
@@ -200,13 +265,11 @@ async def _cleanup_old_checks():
     async with async_session_maker() as db:
         try:
             cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
-
             result = await db.execute(
                 delete(WebsiteCheck).where(
                     WebsiteCheck.checked_at < cutoff_date
                 )
             )
-
             await db.commit()
             logger.info(f"Cleaned up {result.rowcount} old check records")
         except Exception as e:
@@ -214,14 +277,17 @@ async def _cleanup_old_checks():
             await db.rollback()
             raise
         finally:
-            # Явно закрываем сессию
             await db.close()
 
 
 @celery_app.task(name="app.tasks.monitor.stop_website_monitoring")
 def stop_website_monitoring(website_id: int):
     """Останавливает мониторинг сайта"""
-    asyncio.run(_stop_website_monitoring(website_id))
+    loop = get_or_create_eventloop()
+    try:
+        loop.run_until_complete(_stop_website_monitoring(website_id))
+    finally:
+        loop.run_until_complete(engine.dispose())
 
 
 async def _stop_website_monitoring(website_id: int):
@@ -243,5 +309,4 @@ async def _stop_website_monitoring(website_id: int):
             await db.rollback()
             raise
         finally:
-            # Явно закрываем сессию
             await db.close()

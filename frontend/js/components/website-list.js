@@ -52,7 +52,7 @@ const WebsiteListComponent = {
                                 <span class="meta-item">Valid word: "{{ website.valid_word }}"</span>
                                 <span class="meta-item">Failure threshold: {{ website.failure_threshold || 3 }}</span>
                                 <span v-if="website.response_time && website.is_active" class="meta-item">
-                                    Response time: {{ website.response_time }}ms
+                                    Response time: {{ website.response_time ? website.response_time.toFixed(1) : 'N/A' }}ms
                                 </span>
                                 <span v-if="website.last_check && website.is_active" class="meta-item">
                                     Last check: {{ formatDate(website.last_check) }}

@@ -753,3 +753,35 @@ body {
     background: #e2e8f0;
     color: #718096;
 }
+
+.site-card {
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  padding: 18px 22px;
+  box-shadow: 0 2px 14px rgba(50, 70, 130, 0.08);
+  max-width: 400px;
+  min-width: 320px;
+  display: inline-block; /* для нескольких карточек в ряд */
+  vertical-align: top;
+}
+
+.site-info-grid {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 6px 18px;
+  align-items: center;
+}
+
+.site-info-label {
+  font-weight: 600;
+  color: #4a5568;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.site-info-value {
+  text-align: left;
+  color: #1a202c;
+  word-break: break-word;
+}
