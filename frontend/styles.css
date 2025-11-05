@@ -285,7 +285,7 @@ body {
 .header-user {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
 }
 
 .user-info {
@@ -301,6 +301,24 @@ body {
 .user-email {
     font-size: 12px;
     color: #718096;
+}
+
+.btn-settings {
+    padding: 10px;
+    background: white;
+    color: #667eea;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-settings:hover {
+    background: #f7fafc;
+    border-color: #667eea;
 }
 
 .btn-logout {
@@ -376,6 +394,32 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.website-title {
+    font-size: 28px;
+    color: #1a202c;
+    font-weight: 700;
+    margin: 0;
+}
+
+.btn-add-website {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: auto !important;
+    padding: 12px 24px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Убедимся, что кнопка видима */
+.website-header .btn-primary {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .website-list {
@@ -437,19 +481,31 @@ body {
 .website-url {
     font-size: 14px;
     color: #718096;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     word-break: break-all;
 }
 
-.website-meta {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+/* Grid layout for aligned info */
+.site-info-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 8px 18px;
+    align-items: center;
 }
 
-.meta-item {
-    font-size: 13px;
+.site-info-label {
+    font-weight: 600;
     color: #4a5568;
+    text-align: right;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.site-info-value {
+    text-align: left;
+    color: #1a202c;
+    word-break: break-word;
+    font-size: 13px;
 }
 
 .status-badge {
@@ -478,6 +534,16 @@ body {
 .status-error {
     background: #fed7d7;
     color: #c53030;
+}
+
+.status-stopped {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.status-N\/A {
+    background: #e2e8f0;
+    color: #718096;
 }
 
 .website-actions {
@@ -680,108 +746,9 @@ body {
         width: 100%;
         justify-content: flex-end;
     }
-}
-/* Website List */
-.website-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    gap: 20px;
-    flex-wrap: wrap;
-}
 
-.website-title {
-    font-size: 28px;
-    color: #1a202c;
-    font-weight: 700;
-    margin: 0;
-}
-
-.btn-add-website {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    width: auto !important;
-    padding: 12px 24px !important;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-/* Убедимся, что кнопка видима */
-.website-header .btn-primary {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.status-online {
-    background: #c6f6d5;
-    color: #2f855a;
-}
-
-.status-offline {
-    background: #fed7d7;
-    color: #c53030;
-}
-
-.status-pending {
-    background: #feebc8;
-    color: #c05621;
-}
-
-.status-error {
-    background: #fed7d7;
-    color: #c53030;
-}
-
-.status-stopped {
-    background: #e2e8f0;
-    color: #4a5568;
-}
-
-/* Добавляем стиль для N/A статуса */
-.status-N\/A {
-    background: #e2e8f0;
-    color: #718096;
-}
-
-.site-card {
-  background: #fff;
-  border-radius: 12px;
-  margin-bottom: 18px;
-  padding: 18px 22px;
-  box-shadow: 0 2px 14px rgba(50, 70, 130, 0.08);
-  max-width: 400px;
-  min-width: 320px;
-  display: inline-block; /* для нескольких карточек в ряд */
-  vertical-align: top;
-}
-
-.site-info-grid {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 6px 18px;
-  align-items: center;
-}
-
-.site-info-label {
-  font-weight: 600;
-  color: #4a5568;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.site-info-value {
-  text-align: left;
-  color: #1a202c;
-  word-break: break-word;
+    .site-info-grid {
+        grid-template-columns: 140px 1fr;
+        gap: 6px 12px;
+    }
 }

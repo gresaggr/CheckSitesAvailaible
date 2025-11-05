@@ -20,6 +20,8 @@ async def send_telegram_notification(chat_id: str, message: str) -> bool:
         logger.warning("Telegram bot token not configured")
         return False
 
+    if chat_id.startswith("100"):
+        chat_id = f'-{chat_id}'
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
 
     payload = {

@@ -13,6 +13,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     balance = Column(Float, default=0.0)
     is_active = Column(Boolean, default=True)
+    default_telegram_chat_id = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

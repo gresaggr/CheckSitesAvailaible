@@ -56,6 +56,9 @@ const WebsiteModalComponent = {
                     >
                     <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
                         Receive notifications when website goes down. 
+                        <span v-if="defaultChatId" style="color: #667eea;">
+                            (Using default: {{ defaultChatId }})
+                        </span>
                         <a href="#" @click.prevent="showTelegramHelp = !showTelegramHelp" style="color: #667eea;">
                             How to get Chat ID?
                         </a>
@@ -143,7 +146,7 @@ const WebsiteModalComponent = {
             </div>
         </div>
     `,
-    props: ['website', 'isEdit'],
+    props: ['website', 'isEdit', 'defaultChatId'],
     data() {
         return {
             showTelegramHelp: false,
@@ -154,6 +157,7 @@ const WebsiteModalComponent = {
                 timeout: 30,
                 check_interval: 300,
                 telegram_chat_id: '',
+                failure_threshold: 3,
                 is_active: true
             }
         };
@@ -161,6 +165,9 @@ const WebsiteModalComponent = {
     mounted() {
         if (this.isEdit && this.website) {
             this.form = {...this.website};
+        } else if (!this.isEdit && this.defaultChatId) {
+            // Set default chat ID for new websites
+            this.form.telegram_chat_id = this.defaultChatId;
         }
     },
     methods: {

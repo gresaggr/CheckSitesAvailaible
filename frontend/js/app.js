@@ -7,7 +7,8 @@ createApp({
         'dashboard-component': DashboardComponent,
         'website-list-component': WebsiteListComponent,
         'website-modal-component': WebsiteModalComponent,
-        'stats-modal-component': StatsModalComponent
+        'stats-modal-component': StatsModalComponent,
+        'profile-modal-component': ProfileModalComponent
     },
     data() {
         return {
@@ -162,6 +163,15 @@ createApp({
                 }, 3000);
             } catch (err) {
                 alert('Failed to check website: ' + err.message);
+            }
+        },
+
+        async handleReloadUser() {
+            try {
+                await this.loadUserData();
+                this.showSuccess('Profile updated successfully!');
+            } catch (err) {
+                console.error('Failed to reload user data:', err);
             }
         },
 

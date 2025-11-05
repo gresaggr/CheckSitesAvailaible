@@ -30,7 +30,7 @@ const api = {
     async login(email, password) {
         return this.call('/auth/login/', {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({email, password}),
             skipAuth: true
         });
     },
@@ -38,13 +38,20 @@ const api = {
     async register(email, username, password) {
         return this.call('/auth/register/', {
             method: 'POST',
-            body: JSON.stringify({ email, username, password }),
+            body: JSON.stringify({email, username, password}),
             skipAuth: true
         });
     },
 
     async getCurrentUser() {
         return this.call('/auth/me');
+    },
+
+    async updateProfile(data) {
+        return this.call('/auth/me', {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
     },
 
     // Websites

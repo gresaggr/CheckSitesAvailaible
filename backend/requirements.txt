@@ -18,6 +18,7 @@ bcrypt==4.1.2
 
 # HTTP client
 httpx
+curl-cffi
 
 # Celery and Redis
 celery[redis]

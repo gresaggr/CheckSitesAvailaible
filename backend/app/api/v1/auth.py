@@ -6,9 +6,10 @@ from app.api.deps import get_current_user
 from app.db.session import get_async_session
 from app.models import User
 from app.schemas.token import Token
-from app.schemas.user import UserCreate, UserLogin, UserResponse
+from app.schemas.user import UserCreate, UserLogin, UserResponse, UserUpdate
 from app.core.security import create_access_token, verify_password, get_password_hash
 from app.core.logger import get_logger
+from app.services.telegram import validate_telegram_chat_id
 
 router = APIRouter()
 logger = get_logger("api.auth")
@@ -82,4 +83,30 @@ async def get_current_user_info(
         current_user: User = Depends(get_current_user)
 ):
     """Получение информации о текущем пользователе"""
+    return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_current_user(
+        user_data: UserUpdate,
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_async_session)
+):
+    """Update current user profile"""
+
+    # Validate telegram chat ID if provided
+    if user_data.default_telegram_chat_id is not None:
+        if user_data.default_telegram_chat_id:  # Only validate if not empty
+            is_valid = await validate_telegram_chat_id(user_data.default_telegram_chat_id)
+            if not is_valid:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid Telegram chat ID. Make sure you've started the bot."
+                )
+        current_user.default_telegram_chat_id = user_data.default_telegram_chat_id or None
+
+    await db.commit()
+    await db.refresh(current_user)
+
+    logger.info(f"User {current_user.id} profile updated")
     return current_user

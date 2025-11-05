@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
@@ -14,6 +16,10 @@ class UserCreate(UserBase):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserUpdate(BaseModel):
+    default_telegram_chat_id: Optional[str] = None
 
 
 class UserResponse(BaseModel):

@@ -9,6 +9,8 @@ from app.db.session import async_session_maker, engine
 from app.models import User, Website, WebsiteCheck
 from app.services.telegram import send_telegram_notification
 
+from curl_cffi.requests import AsyncSession as CurlAsyncSession
+
 logger = get_logger("tasks.monitor")
 
 
@@ -118,8 +120,10 @@ async def _check_website(website_id: int):
             start_time = datetime.now(timezone.utc)
 
             try:
-                async with httpx.AsyncClient(timeout=website.timeout) as client:
-                    response = await client.get(website.url, follow_redirects=True)
+                # async with httpx.AsyncClient(timeout=website.timeout) as client:
+                async with CurlAsyncSession() as client:
+                    # response = await client.get(website.url, follow_redirects=True)
+                    response = await client.get(website.url, impersonate="chrome")
                     logger.debug(f'Checking website: {website.url} response succeed...')
                     response_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                     status_code = response.status_code
@@ -238,7 +242,7 @@ async def _send_alert_if_needed(website: Website, db: AsyncSession):
             f"*Error:* {website.error_message or 'Unknown'}\n"
             f"*Time:* {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC"
         )
-
+        logger.info(f"Sending notification to {website.telegram_chat_id}")
         success = await send_telegram_notification(
             website.telegram_chat_id,
             message

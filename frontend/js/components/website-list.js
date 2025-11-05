@@ -35,28 +35,46 @@ const WebsiteListComponent = {
                         <div class="website-details">
                             <div class="website-name">{{ website.name || 'Unnamed Website' }}</div>
                             <div class="website-url">{{ website.url }}</div>
-                           <div class="website-meta">
-                                <span class="meta-item">
-                                    Status: 
+                            <div class="site-info-grid">
+                                <div class="site-info-label">Status:</div>
+                                <div class="site-info-value">
                                     <span class="status-badge" :class="'status-' + getDisplayStatus(website)">
                                         {{ getDisplayStatus(website) }}
                                     </span>
-                                </span>
-                                <span class="meta-item">
-                                    Monitoring: 
+                                </div>
+
+                                <div class="site-info-label">Monitoring:</div>
+                                <div class="site-info-value">
                                     <span class="status-badge" :class="website.is_active ? 'status-online' : 'status-offline'">
                                         {{ website.is_active ? 'Active' : 'Stopped' }}
                                     </span>
-                                </span>
-                                <span class="meta-item">Timeout: {{ website.timeout }}s</span>
-                                <span class="meta-item">Valid word: "{{ website.valid_word }}"</span>
-                                <span class="meta-item">Failure threshold: {{ website.failure_threshold || 3 }}</span>
-                                <span v-if="website.response_time && website.is_active" class="meta-item">
-                                    Response time: {{ website.response_time ? website.response_time.toFixed(1) : 'N/A' }}ms
-                                </span>
-                                <span v-if="website.last_check && website.is_active" class="meta-item">
-                                    Last check: {{ formatDate(website.last_check) }}
-                                </span>
+                                </div>
+
+                                <div class="site-info-label">Timeout:</div>
+                                <div class="site-info-value">{{ website.timeout }}s</div>
+
+                                <div class="site-info-label">Valid word:</div>
+                                <div class="site-info-value">"{{ website.valid_word }}"</div>
+
+                                <div class="site-info-label">Max failure threshold:</div>
+                                <div class="site-info-value">{{ website.failure_threshold || 3 }}</div>
+
+                                <div class="site-info-label">Current failures:</div>
+                                <div class="site-info-value">
+                                    <span :style="{ color: website.consecutive_failures > 0 ? '#e53e3e' : '#2f855a', fontWeight: '600' }">
+                                        {{ website.consecutive_failures || 0 }}
+                                    </span>
+                                </div>
+
+                                <template v-if="website.response_time && website.is_active">
+                                    <div class="site-info-label">Response time:</div>
+                                    <div class="site-info-value">{{ website.response_time.toFixed(1) }}ms</div>
+                                </template>
+
+                                <template v-if="website.last_check && website.is_active">
+                                    <div class="site-info-label">Last check:</div>
+                                    <div class="site-info-value">{{ formatDate(website.last_check) }}</div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -113,44 +131,6 @@ const WebsiteListComponent = {
             // More than 1 day
             const days = Math.floor(diff / 86400000);
             return `${days} day${days > 1 ? 's' : ''} ago`;
-        },
-
-        formatInterval(seconds) {
-            if (!seconds) return 'N/A';
-
-            if (seconds < 60) {
-                return `${seconds}s`;
-            }
-
-            if (seconds < 3600) {
-                const minutes = Math.floor(seconds / 60);
-                return `${minutes}m`;
-            }
-
-            const hours = Math.floor(seconds / 3600);
-            return `${hours}h`;
-        },
-
-        calculateUptime(website) {
-            // Placeholder for uptime calculation
-            // This would require historical data from backend
-            if (website.status === 'online') {
-                return '99.9%';
-            } else if (website.status === 'offline') {
-                return '0%';
-            }
-            return 'N/A';
-        },
-
-        getStatusColor(status) {
-            const colors = {
-                online: '#48bb78',
-                offline: '#f56565',
-                pending: '#ed8936',
-                error: '#f56565',
-                'N/A': '#a0aec0'
-            };
-            return colors[status] || '#a0aec0';
         }
     }
 };
