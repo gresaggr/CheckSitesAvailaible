@@ -55,10 +55,11 @@ const WebsiteModalComponent = {
                         placeholder="123456789 or @username"
                     >
                     <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
-                        Receive notifications when website goes down. 
+                        Receive notifications when website goes down.
                         <span v-if="defaultChatId" style="color: #667eea;">
-                            (Using default: {{ defaultChatId }})
+                            Using default from profile: <strong>{{ defaultChatId }}</strong>
                         </span>
+                        <br>
                         <a href="#" @click.prevent="showTelegramHelp = !showTelegramHelp" style="color: #667eea;">
                             How to get Chat ID?
                         </a>
@@ -162,15 +163,46 @@ const WebsiteModalComponent = {
             }
         };
     },
-    mounted() {
-        if (this.isEdit && this.website) {
-            this.form = {...this.website};
-        } else if (!this.isEdit && this.defaultChatId) {
-            // Set default chat ID for new websites
-            this.form.telegram_chat_id = this.defaultChatId;
+    created() {
+        console.log('WebsiteModal created, isEdit:', this.isEdit, 'website:', this.website, 'defaultChatId:', this.defaultChatId);
+        this.initializeForm();
+    },
+    watch: {
+        website: {
+            handler() {
+                if (this.isEdit) {
+                    this.initializeForm();
+                }
+            },
+            deep: true
+        },
+        defaultChatId(newVal) {
+            console.log('defaultChatId changed to:', newVal);
+            if (!this.isEdit && !this.form.telegram_chat_id) {
+                this.form.telegram_chat_id = newVal || '';
+            }
         }
     },
     methods: {
+        initializeForm() {
+            if (this.isEdit && this.website) {
+                this.form = {...this.website};
+                console.log('Form initialized for edit:', this.form);
+            } else {
+                // Reset form for new website
+                this.form = {
+                    name: '',
+                    url: '',
+                    valid_word: '',
+                    timeout: 30,
+                    check_interval: 300,
+                    telegram_chat_id: this.defaultChatId || '',
+                    failure_threshold: 3,
+                    is_active: true
+                };
+                console.log('Form initialized for new website:', this.form);
+            }
+        },
         handleSave() {
             if (!this.form.url || !this.form.valid_word) {
                 alert('Please fill in all required fields');
@@ -200,6 +232,7 @@ const WebsiteModalComponent = {
                 delete data.telegram_chat_id;
             }
 
+            console.log('Saving website with data:', data);
             this.$emit('save', data);
         }
     }

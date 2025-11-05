@@ -39,6 +39,7 @@ createApp({
                     await this.loadWebsites();
                     this.isAuthenticated = true;
                 } catch (err) {
+                    console.error('Auth check failed:', err);
                     localStorage.removeItem('token');
                     this.isAuthenticated = false;
                 }
@@ -47,12 +48,19 @@ createApp({
         },
 
         async loadUserData() {
-            this.user = await api.getCurrentUser();
+            try {
+                this.user = await api.getCurrentUser();
+                console.log('User data loaded:', this.user);
+            } catch (err) {
+                console.error('Failed to load user data:', err);
+                throw err;
+            }
         },
 
         async loadWebsites() {
             try {
                 this.websites = await api.getWebsites();
+                console.log('Websites loaded:', this.websites.length);
             } catch (err) {
                 console.error('Failed to load websites:', err);
             }
@@ -168,10 +176,13 @@ createApp({
 
         async handleReloadUser() {
             try {
+                console.log('Reloading user data...');
                 await this.loadUserData();
+                console.log('User data reloaded:', this.user);
                 this.showSuccess('Profile updated successfully!');
             } catch (err) {
                 console.error('Failed to reload user data:', err);
+                alert('Failed to reload profile: ' + err.message);
             }
         },
 

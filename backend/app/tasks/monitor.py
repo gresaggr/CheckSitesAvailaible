@@ -197,10 +197,10 @@ async def _send_recovery_notification(website: Website):
     # Отправляем уведомление о восстановлении
     message = (
         f"✅ *Website Recovered*\n\n"
-        f"*Website:* {website.name or website.url}\\n"
-        f"*URL:* {website.url}\\n"
-        f"*Status:* {website.status}\\n"
-        f"*Response Time:* {website.response_time:.2f}ms\\n"
+        f"*Website:* {website.name or website.url}\n"
+        f"*URL:* {website.url}\n"
+        f"*Status:* {website.status}\n"
+        f"*Response Time:* {website.response_time:.2f}ms\n"
         f"*Time:* {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 

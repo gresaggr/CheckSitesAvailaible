@@ -50,12 +50,13 @@ const ProfileModalComponent = {
                 <div class="form-group">
                     <label class="form-label">Default Telegram Chat ID</label>
                     <input
-                        v-model="form.default_telegram_chat_id"
+                        v-model="chatId"
                         type="text"
                         class="form-input"
                         placeholder="123456789 or leave empty"
                     >
                     <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
+                        Current value: <strong>{{ user.default_telegram_chat_id || 'Not set' }}</strong><br>
                         This Chat ID will be used by default for all new websites. 
                         <a href="#" @click.prevent="showTelegramHelp = !showTelegramHelp" style="color: #667eea;">
                             How to get Chat ID?
@@ -90,13 +91,22 @@ const ProfileModalComponent = {
             loading: false,
             error: '',
             success: '',
-            form: {
-                default_telegram_chat_id: ''
-            }
+            chatId: ''
         };
     },
-    mounted() {
-        this.form.default_telegram_chat_id = this.user.default_telegram_chat_id || '';
+    created() {
+        console.log('ProfileModal created, user:', this.user);
+        this.chatId = this.user?.default_telegram_chat_id || '';
+    },
+    watch: {
+        user: {
+            handler(newUser) {
+                console.log('User changed in ProfileModal:', newUser);
+                this.chatId = newUser?.default_telegram_chat_id || '';
+            },
+            deep: true,
+            immediate: true
+        }
     },
     methods: {
         async handleSave() {
@@ -106,9 +116,10 @@ const ProfileModalComponent = {
 
             try {
                 const data = {
-                    default_telegram_chat_id: this.form.default_telegram_chat_id || null
+                    default_telegram_chat_id: this.chatId || null
                 };
 
+                console.log('Saving profile with data:', data);
                 await api.updateProfile(data);
                 this.success = 'Profile updated successfully!';
 
@@ -118,6 +129,7 @@ const ProfileModalComponent = {
                     this.$emit('close');
                 }, 1500);
             } catch (err) {
+                console.error('Profile update error:', err);
                 this.error = err.message || 'Failed to update profile';
             } finally {
                 this.loading = false;
