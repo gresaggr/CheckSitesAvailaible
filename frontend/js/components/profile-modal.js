@@ -1,6 +1,6 @@
 const ProfileModalComponent = {
     template: `
-        <div class="modal-overlay" @click.self="$emit('close')">
+        <div class="modal-overlay" @mousedown.self="handleOverlayClick" @mouseup.self="handleOverlayRelease">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="modal-title">Profile Settings</h2>
@@ -91,7 +91,8 @@ const ProfileModalComponent = {
             loading: false,
             error: '',
             success: '',
-            chatId: ''
+            chatId: '',
+            overlayClicked: false
         };
     },
     created() {
@@ -109,6 +110,15 @@ const ProfileModalComponent = {
         }
     },
     methods: {
+        handleOverlayClick() {
+            this.overlayClicked = true;
+        },
+        handleOverlayRelease() {
+            if (this.overlayClicked) {
+                this.$emit('close');
+            }
+            this.overlayClicked = false;
+        },
         async handleSave() {
             this.error = '';
             this.success = '';

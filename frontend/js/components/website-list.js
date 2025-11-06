@@ -50,7 +50,7 @@ const WebsiteListComponent = {
                                     </span>
                                 </div>
 
-                                <div class="site-info-label">Timeout:</div>
+                                <div class="site-info-label">Max response timeout:</div>
                                 <div class="site-info-value">{{ website.timeout }}s</div>
 
                                 <div class="site-info-label">Valid word:</div>

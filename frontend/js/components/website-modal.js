@@ -33,12 +33,12 @@ const WebsiteModalComponent = {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Valid Word *</label>
+                    <label class="form-label">Valid keywords *</label>
                     <input
                         v-model="form.valid_word"
                         type="text"
                         class="form-input"
-                        placeholder="Word to check in response"
+                        placeholder="Words to check in response"
                         required
                     >
                     <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
@@ -77,7 +77,7 @@ const WebsiteModalComponent = {
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
-                        <label class="form-label">Timeout (seconds) *</label>
+                        <label class="form-label">Max response timeout (sec) *</label>
                         <input
                             v-model.number="form.timeout"
                             type="number"
@@ -110,7 +110,7 @@ const WebsiteModalComponent = {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Failure Threshold *</label>
+                    <label class="form-label">Failure threshold *</label>
                     <input
                         v-model.number="form.failure_threshold"
                         type="number"
