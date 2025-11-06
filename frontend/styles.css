@@ -752,3 +752,79 @@ body {
         gap: 6px 12px;
     }
 }
+
+.btn-toggle-details {
+  display: flex;
+  align-items: center;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.3s;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.12);
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.btn-toggle-details:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
+}
+
+.btn-toggle-details svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+  fill: #fff;
+}
+
+.btn-toggle-details .rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Compact view - always visible */
+.site-info-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    padding: 10px 0;
+}
+
+.site-info-compact .site-info-label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 14px;
+}
+
+.site-info-compact .site-info-value {
+    display: flex;
+    align-items: center;
+}
+
+/* Grid layout for aligned info - expanded view */
+.site-info-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 8px 18px;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 2px solid #e2e8f0;
+    animation: slideDownDetails 0.3s ease;
+}
+
+@keyframes slideDownDetails {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

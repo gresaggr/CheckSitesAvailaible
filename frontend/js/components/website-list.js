@@ -35,14 +35,19 @@ const WebsiteListComponent = {
                         <div class="website-details">
                             <div class="website-name">{{ website.name || 'Unnamed Website' }}</div>
                             <div class="website-url">{{ website.url }}</div>
-                            <div class="site-info-grid">
+                            
+                            <!-- Compact view - always visible -->
+                            <div class="site-info-compact">
                                 <div class="site-info-label">Status:</div>
                                 <div class="site-info-value">
                                     <span class="status-badge" :class="'status-' + getDisplayStatus(website)">
                                         {{ getDisplayStatus(website) }}
                                     </span>
                                 </div>
+                            </div>
 
+                            <!-- Expanded view - toggleable -->
+                            <div v-if="expandedItems[website.id]" class="site-info-grid">
                                 <div class="site-info-label">Monitoring:</div>
                                 <div class="site-info-value">
                                     <span class="status-badge" :class="website.is_active ? 'status-online' : 'status-offline'">
@@ -76,6 +81,14 @@ const WebsiteListComponent = {
                                     <div class="site-info-value">{{ formatDate(website.last_check) }}</div>
                                 </template>
                             </div>
+
+                            <!-- Toggle button -->
+                            <button @click="toggleExpand(website.id)" class="btn-toggle-details">
+                                <span>{{ expandedItems[website.id] ? 'Hide details' : 'Show details' }}</span>
+                                <svg viewBox="0 0 24 24" :class="{ 'rotate-180': expandedItems[website.id] }">
+                                    <path d="M7 10l5 5 5-5z"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div class="website-actions">
@@ -95,8 +108,16 @@ const WebsiteListComponent = {
         </div>
     `,
     props: ['websites'],
-
+    data() {
+        return {
+            expandedItems: {}
+        };
+    },
     methods: {
+        toggleExpand(websiteId) {
+            this.expandedItems[websiteId] = !this.expandedItems[websiteId];
+        },
+
         // Возвращает статус для отображения (N/A если мониторинг остановлен)
         getDisplayStatus(website) {
             if (!website.is_active || website.status === 'stopped') {
