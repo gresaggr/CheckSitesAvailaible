@@ -1,6 +1,6 @@
 const WebsiteModalComponent = {
     template: `
-        <div class="modal-overlay" @click.self="$emit('close')">
+        <div class="modal-overlay" @mousedown.self="handleOverlayClick" @mouseup.self="handleOverlayRelease">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="modal-title">{{ isEdit ? 'Edit Website' : 'Add Website' }}</h2>
@@ -151,6 +151,7 @@ const WebsiteModalComponent = {
     data() {
         return {
             showTelegramHelp: false,
+            overlayClicked: false,
             form: {
                 name: '',
                 url: '',
@@ -184,6 +185,15 @@ const WebsiteModalComponent = {
         }
     },
     methods: {
+        handleOverlayClick() {
+            this.overlayClicked = true;
+        },
+        handleOverlayRelease() {
+            if (this.overlayClicked) {
+                this.$emit('close');
+            }
+            this.overlayClicked = false;
+        },
         initializeForm() {
             if (this.isEdit && this.website) {
                 this.form = {...this.website};

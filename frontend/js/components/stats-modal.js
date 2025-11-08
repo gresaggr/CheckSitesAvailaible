@@ -1,6 +1,6 @@
 const StatsModalComponent = {
     template: `
-        <div class="modal-overlay" @click.self="$emit('close')">
+        <div class="modal-overlay" @mousedown.self="handleOverlayClick" @mouseup.self="handleOverlayRelease">
             <div class="modal-content" style="max-width: 700px;">
                 <div class="modal-header">
                     <h2 class="modal-title">Statistics - {{ website.name || website.url }}</h2>
@@ -115,7 +115,8 @@ const StatsModalComponent = {
             loading: true,
             error: null,
             stats: null,
-            history: []
+            history: [],
+            overlayClicked: false
         };
     },
     async mounted() {
@@ -123,6 +124,15 @@ const StatsModalComponent = {
         await this.loadHistory();
     },
     methods: {
+        handleOverlayClick() {
+            this.overlayClicked = true;
+        },
+        handleOverlayRelease() {
+            if (this.overlayClicked) {
+                this.$emit('close');
+            }
+            this.overlayClicked = false;
+        },
         async loadStats() {
             try {
                 this.stats = await api.getWebsiteStats(this.website.id);
