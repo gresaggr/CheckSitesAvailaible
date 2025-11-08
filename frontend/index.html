@@ -38,6 +38,8 @@
             v-if="isAuthenticated && !isLoading"
             :user="user"
             :websites="websites"
+            :pagination="safePagination"
+            :sorting="safeSorting"
             @logout="handleLogout"
             @add-website="handleAddWebsite"
             @edit-website="handleEditWebsite"
@@ -47,6 +49,9 @@
             @check-website="handleCheckWebsite"
             @reload-websites="loadWebsites"
             @reload-user="handleReloadUser"
+            @page-change="handlePageChange"
+            @page-size-change="handlePageSizeChange"
+            @sort-change="handleSortChange"
     ></dashboard-component>
 </div>
 

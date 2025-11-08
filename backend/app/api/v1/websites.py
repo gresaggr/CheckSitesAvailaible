@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, func, and_
-from typing import List
+from sqlalchemy import select, delete, func, and_, desc, asc
+from typing import List, Optional
 from datetime import datetime, timedelta, timezone
 
 from app.db.session import get_async_session
@@ -12,7 +12,8 @@ from app.schemas.website import (
     WebsiteUpdate,
     WebsiteResponse,
     WebsiteStatsResponse,
-    WebsiteCheckResponse
+    WebsiteCheckResponse,
+    WebsiteListResponse
 )
 from app.api.deps import get_current_user
 from app.core.logger import get_logger
@@ -62,19 +63,55 @@ async def create_website(
     return new_website
 
 
-@router.get("/", response_model=List[WebsiteResponse])
+@router.get("/", response_model=WebsiteListResponse)
 async def get_websites(
         current_user: User = Depends(get_current_user),
-        db: AsyncSession = Depends(get_async_session)
+        db: AsyncSession = Depends(get_async_session),
+        page: int = Query(default=1, ge=1, description="Page number"),
+        page_size: int = Query(default=10, ge=1, le=100, description="Items per page"),
+        sort_by: Optional[str] = Query(default="created_at",
+                                       description="Sort field: name, status, is_active, created_at"),
+        sort_order: Optional[str] = Query(default="desc", description="Sort order: asc or desc")
 ):
-    """Получить все сайты текущего пользователя"""
+    """Получить все сайты текущего пользователя с пагинацией и сортировкой"""
 
-    result = await db.execute(
-        select(Website).where(Website.user_id == current_user.id)
+    # Валидация параметров сортировки
+    allowed_sort_fields = ["name", "status", "is_active", "created_at", "last_check"]
+    if sort_by not in allowed_sort_fields:
+        sort_by = "created_at"
+
+    if sort_order not in ["asc", "desc"]:
+        sort_order = "desc"
+
+    # Получаем общее количество
+    count_query = select(func.count(Website.id)).where(Website.user_id == current_user.id)
+    total_result = await db.execute(count_query)
+    total = total_result.scalar()
+
+    # Определяем поле сортировки
+    sort_field = getattr(Website, sort_by)
+    order_func = asc if sort_order == "asc" else desc
+
+    # Получаем сайты с пагинацией
+    offset = (page - 1) * page_size
+    query = (
+        select(Website)
+        .where(Website.user_id == current_user.id)
+        .order_by(order_func(sort_field))
+        .offset(offset)
+        .limit(page_size)
     )
+
+    result = await db.execute(query)
     websites = result.scalars().all()
 
-    return websites
+    return WebsiteListResponse(
+        items=websites,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=(total + page_size - 1) // page_size
+    )
 
 
 @router.get("/{website_id}", response_model=WebsiteResponse)

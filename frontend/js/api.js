@@ -55,8 +55,14 @@ const api = {
     },
 
     // Websites
-    async getWebsites() {
-        return this.call('/websites/');
+    async getWebsites(page = 1, pageSize = 10, sortBy = 'created_at', sortOrder = 'desc') {
+        const params = new URLSearchParams({
+            page: page.toString(),
+            page_size: pageSize.toString(),
+            sort_by: sortBy,
+            sort_order: sortOrder
+        });
+        return this.call(`/websites/?${params.toString()}`);
     },
 
     async createWebsite(data) {

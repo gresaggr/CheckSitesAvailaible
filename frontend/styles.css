@@ -415,11 +415,57 @@ body {
     flex-shrink: 0;
 }
 
-/* Убедимся, что кнопка видима */
 .website-header .btn-primary {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
+}
+
+/* Controls Panel */
+.controls-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    white-space: nowrap;
+}
+
+.control-select {
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a202c;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    outline: none;
+}
+
+.control-select:hover {
+    border-color: #cbd5e0;
+}
+
+.control-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .website-list {
@@ -485,12 +531,45 @@ body {
     word-break: break-all;
 }
 
-/* Grid layout for aligned info */
+.site-info-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    padding: 10px 0;
+}
+
+.site-info-compact .site-info-label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 14px;
+}
+
+.site-info-compact .site-info-value {
+    display: flex;
+    align-items: center;
+}
+
 .site-info-grid {
     display: grid;
     grid-template-columns: 160px 1fr;
     gap: 8px 18px;
     align-items: center;
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 2px solid #e2e8f0;
+    animation: slideDownDetails 0.3s ease;
+}
+
+@keyframes slideDownDetails {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .site-info-label {
@@ -546,6 +625,39 @@ body {
     color: #718096;
 }
 
+.btn-toggle-details {
+    display: flex;
+    align-items: center;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.3s, box-shadow 0.3s;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.12);
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.btn-toggle-details:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
+}
+
+.btn-toggle-details svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+    fill: #fff;
+}
+
+.btn-toggle-details .rotate-180 {
+    transform: rotate(180deg);
+}
+
 .website-actions {
     display: flex;
     gap: 10px;
@@ -581,6 +693,61 @@ body {
 
 .btn-icon-danger svg {
     fill: #e53e3e;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-btn {
+    padding: 10px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #f7fafc;
+    border-color: #667eea;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn svg {
+    fill: #4a5568;
+}
+
+.pagination-info {
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a202c;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-total {
+    font-weight: 400;
+    color: #718096;
+    font-size: 13px;
 }
 
 /* Modal */
@@ -751,80 +918,29 @@ body {
         grid-template-columns: 140px 1fr;
         gap: 6px 12px;
     }
-}
 
-.btn-toggle-details {
-  display: flex;
-  align-items: center;
-  padding: 8px 18px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.3s, box-shadow 0.3s;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.12);
-  gap: 10px;
-  margin: 12px 0;
-}
-
-.btn-toggle-details:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
-}
-
-.btn-toggle-details svg {
-  width: 20px;
-  height: 20px;
-  transition: transform 0.3s ease;
-  fill: #fff;
-}
-
-.btn-toggle-details .rotate-180 {
-  transform: rotate(180deg);
-}
-
-/* Compact view - always visible */
-.site-info-compact {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 12px 0;
-    padding: 10px 0;
-}
-
-.site-info-compact .site-info-label {
-    font-weight: 600;
-    color: #4a5568;
-    font-size: 14px;
-}
-
-.site-info-compact .site-info-value {
-    display: flex;
-    align-items: center;
-}
-
-/* Grid layout for aligned info - expanded view */
-.site-info-grid {
-    display: grid;
-    grid-template-columns: 160px 1fr;
-    gap: 8px 18px;
-    align-items: center;
-    margin-top: 12px;
-    padding-top: 16px;
-    border-top: 2px solid #e2e8f0;
-    animation: slideDownDetails 0.3s ease;
-}
-
-@keyframes slideDownDetails {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
+    .controls-panel {
+        flex-direction: column;
+        align-items: stretch;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+    .control-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .control-select {
+        flex: 1;
+        max-width: 200px;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+    }
+
+    .pagination-info {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 0;
     }
 }

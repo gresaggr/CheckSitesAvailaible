@@ -11,6 +11,38 @@ const WebsiteListComponent = {
                 </button>
             </div>
 
+            <!-- Sort and Filter Controls -->
+            <div v-if="websites.length > 0" class="controls-panel">
+                <div class="control-group">
+                    <label class="control-label">Sort by:</label>
+                    <select v-model="localSortBy" @change="handleSortChange" class="control-select">
+                        <option value="created_at">Created Date</option>
+                        <option value="name">Name</option>
+                        <option value="status">Status</option>
+                        <option value="is_active">Monitoring Active</option>
+                        <option value="last_check">Last Check</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Order:</label>
+                    <select v-model="localSortOrder" @change="handleSortChange" class="control-select">
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Per page:</label>
+                    <select v-model.number="localPageSize" @change="handlePageSizeChange" class="control-select">
+                        <option :value="5">5</option>
+                        <option :value="10">10</option>
+                        <option :value="20">20</option>
+                        <option :value="50">50</option>
+                    </select>
+                </div>
+            </div>
+
             <div v-if="websites.length === 0" class="empty-state">
                 <div class="empty-icon">
                     <svg viewBox="0 0 24 24">
@@ -105,20 +137,96 @@ const WebsiteListComponent = {
                     </div>
                 </div>
             </div>
+
+            <!-- Pagination -->
+            <div v-if="safePageCount > 1" class="pagination">
+                <button 
+                    @click="changePage(1)" 
+                    :disabled="safePage === 1"
+                    class="pagination-btn"
+                    title="First page"
+                >
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z"/>
+                    </svg>
+                </button>
+                
+                <button 
+                    @click="changePage(safePage - 1)" 
+                    :disabled="safePage === 1"
+                    class="pagination-btn"
+                    title="Previous page"
+                >
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                </button>
+
+                <div class="pagination-info">
+                    Page {{ safePage }} of {{ safePageCount }}
+                    <span class="pagination-total">({{ safeTotal }} total)</span>
+                </div>
+
+                <button 
+                    @click="changePage(safePage + 1)" 
+                    :disabled="safePage === safePageCount"
+                    class="pagination-btn"
+                    title="Next page"
+                >
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                    </svg>
+                </button>
+
+                <button 
+                    @click="changePage(safePageCount)" 
+                    :disabled="safePage === safePageCount"
+                    class="pagination-btn"
+                    title="Last page"
+                >
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     `,
-    props: ['websites'],
+    props: ['websites', 'pagination', 'sorting'],
     data() {
         return {
-            expandedItems: {}
+            expandedItems: {},
+            localSortBy: this.sorting?.sortBy || 'created_at',
+            localSortOrder: this.sorting?.sortOrder || 'desc',
+            localPageSize: this.pagination?.pageSize || 10
         };
+    },
+    watch: {
+        'sorting.sortBy'(newVal) {
+            this.localSortBy = newVal;
+        },
+        'sorting.sortOrder'(newVal) {
+            this.localSortOrder = newVal;
+        },
+        'pagination.pageSize'(newVal) {
+            this.localPageSize = newVal;
+        }
+    },
+    computed: {
+        safePage() {
+            return this.pagination?.page || 1;
+        },
+        safePageCount() {
+            return this.pagination?.totalPages || 0;
+        },
+        safeTotal() {
+            return this.pagination?.total || 0;
+        }
     },
     methods: {
         toggleExpand(websiteId) {
             this.expandedItems[websiteId] = !this.expandedItems[websiteId];
         },
 
-        // Возвращает статус для отображения (N/A если мониторинг остановлен)
         getDisplayStatus(website) {
             if (!website.is_active || website.status === 'stopped') {
                 return 'N/A';
@@ -132,26 +240,32 @@ const WebsiteListComponent = {
             const now = new Date();
             const diff = now - date;
 
-            // Less than 1 minute
-            if (diff < 60000) {
-                return 'Just now';
-            }
-
-            // Less than 1 hour
+            if (diff < 60000) return 'Just now';
             if (diff < 3600000) {
                 const minutes = Math.floor(diff / 60000);
                 return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
             }
-
-            // Less than 1 day
             if (diff < 86400000) {
                 const hours = Math.floor(diff / 3600000);
                 return `${hours} hour${hours > 1 ? 's' : ''} ago`;
             }
-
-            // More than 1 day
             const days = Math.floor(diff / 86400000);
             return `${days} day${days > 1 ? 's' : ''} ago`;
+        },
+
+        handleSortChange() {
+            this.$emit('sort-change', this.localSortBy, this.localSortOrder);
+        },
+
+        handlePageSizeChange() {
+            this.$emit('page-size-change', this.localPageSize);
+        },
+
+        changePage(page) {
+            const totalPages = this.safePageCount;
+            if (page >= 1 && page <= totalPages) {
+                this.$emit('page-change', page);
+            }
         }
     }
 };

@@ -42,7 +42,7 @@ const DashboardComponent = {
                         <div class="stat-header">
                             <div>
                                 <div class="stat-label">Total Websites</div>
-                                <div class="stat-value">{{ websites.length }}</div>
+                                <div class="stat-value">{{ pagination?.total || 0 }}</div>
                             </div>
                             <div class="stat-icon" style="background: #bee3f8;">
                                 <svg viewBox="0 0 24 24" fill="#2c5282">
@@ -84,6 +84,8 @@ const DashboardComponent = {
                 <!-- Website List -->
                 <website-list-component
                     :websites="websites"
+                    :pagination="pagination"
+                    :sorting="sorting"
                     @add="showAddModal = true"
                     @edit="handleEdit"
                     @delete="handleDelete"
@@ -91,6 +93,9 @@ const DashboardComponent = {
                     @start="handleStart"
                     @check-now="handleCheckNow"
                     @stats="handleShowStats"
+                    @page-change="handlePageChange"
+                    @page-size-change="handlePageSizeChange"
+                    @sort-change="handleSortChange"
                 ></website-list-component>
 
                 <!-- Add/Edit Modal -->
@@ -120,7 +125,7 @@ const DashboardComponent = {
             </div>
         </div>
     `,
-    props: ['user', 'websites'],
+    props: ['user', 'websites', 'pagination', 'sorting'],
     data() {
         return {
             showAddModal: false,
@@ -178,6 +183,15 @@ const DashboardComponent = {
                 this.$emit('add-website', data);
             }
             this.closeModals();
+        },
+        handlePageChange(page) {
+            this.$emit('page-change', page);
+        },
+        handlePageSizeChange(pageSize) {
+            this.$emit('page-size-change', pageSize);
+        },
+        handleSortChange(sortBy, sortOrder) {
+            this.$emit('sort-change', sortBy, sortOrder);
         }
     }
 };

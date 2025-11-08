@@ -18,7 +18,17 @@ createApp({
             loading: false,
             error: '',
             user: null,
-            websites: []
+            websites: [],
+            pagination: {
+                total: 0,
+                page: 1,
+                pageSize: 10,
+                totalPages: 0
+            },
+            sorting: {
+                sortBy: 'created_at',
+                sortOrder: 'desc'
+            }
         };
     },
     async mounted() {
@@ -28,6 +38,23 @@ createApp({
             setInterval(() => {
                 this.loadWebsites();
             }, 30000);
+        }
+    },
+    computed: {
+        // Ensure pagination object always exists
+        safePagination() {
+            return {
+                total: this.pagination?.total || 0,
+                page: this.pagination?.page || 1,
+                pageSize: this.pagination?.pageSize || 10,
+                totalPages: this.pagination?.totalPages || 0
+            };
+        },
+        safeSorting() {
+            return {
+                sortBy: this.sorting?.sortBy || 'created_at',
+                sortOrder: this.sorting?.sortOrder || 'desc'
+            };
         }
     },
     methods: {
@@ -50,7 +77,6 @@ createApp({
         async loadUserData() {
             try {
                 this.user = await api.getCurrentUser();
-                // console.log('User data loaded:', this.user);
             } catch (err) {
                 console.error('Failed to load user data:', err);
                 throw err;
@@ -59,10 +85,32 @@ createApp({
 
         async loadWebsites() {
             try {
-                this.websites = await api.getWebsites();
-                // console.log('Websites loaded:', this.websites.length);
+                const response = await api.getWebsites(
+                    this.pagination.page,
+                    this.pagination.pageSize,
+                    this.sorting.sortBy,
+                    this.sorting.sortOrder
+                );
+
+                // Update websites
+                this.websites = response.items || [];
+
+                // Update pagination info
+                this.pagination.total = response.total || 0;
+                this.pagination.page = response.page || 1;
+                this.pagination.pageSize = response.page_size || 10;
+                this.pagination.totalPages = response.total_pages || 0;
+
             } catch (err) {
                 console.error('Failed to load websites:', err);
+                // Reset to safe defaults on error
+                this.websites = [];
+                this.pagination = {
+                    total: 0,
+                    page: 1,
+                    pageSize: 10,
+                    totalPages: 0
+                };
             }
         },
 
@@ -109,6 +157,12 @@ createApp({
             this.user = null;
             this.websites = [];
             this.error = '';
+            this.pagination = {
+                total: 0,
+                page: 1,
+                pageSize: 10,
+                totalPages: 0
+            };
         },
 
         async handleAddWebsite(data) {
@@ -176,14 +230,31 @@ createApp({
 
         async handleReloadUser() {
             try {
-                // console.log('Reloading user data...');
                 await this.loadUserData();
-                // console.log('User data reloaded:', this.user);
                 this.showSuccess('Profile updated successfully!');
             } catch (err) {
                 console.error('Failed to reload user data:', err);
                 alert('Failed to reload profile: ' + err.message);
             }
+        },
+
+        async handlePageChange(page) {
+            this.pagination.page = page;
+            await this.loadWebsites();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        async handlePageSizeChange(pageSize) {
+            this.pagination.pageSize = pageSize;
+            this.pagination.page = 1;
+            await this.loadWebsites();
+        },
+
+        async handleSortChange(sortBy, sortOrder) {
+            this.sorting.sortBy = sortBy;
+            this.sorting.sortOrder = sortOrder;
+            this.pagination.page = 1;
+            await this.loadWebsites();
         },
 
         showSuccess(message) {

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -8,8 +8,8 @@ class WebsiteBase(BaseModel):
     name: Optional[str] = None
     valid_word: str
     timeout: int = Field(default=30, ge=1, le=300)
-    telegram_chat_id: Optional[str] = None  # NEW
-    check_interval: int = Field(default=300, ge=60, le=3600)  # NEW: 1 мин - 1 час
+    telegram_chat_id: Optional[str] = None
+    check_interval: int = Field(default=300, ge=60, le=3600)
     failure_threshold: int = Field(default=3, ge=1, le=10)
 
 
@@ -60,6 +60,15 @@ class WebsiteResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class WebsiteListResponse(BaseModel):
+    """Ответ со списком сайтов и пагинацией"""
+    items: List[WebsiteResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 
 class WebsiteStatsResponse(BaseModel):
