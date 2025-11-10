@@ -2,6 +2,8 @@
 
 Полнофункциональная система мониторинга веб-сайтов с проверкой доступности, уведомлениями в Telegram и подробной статистикой.
 
+![Окно профиля](images/profile_screenshot.png)
+
 ## 🚀 Возможности
 
 ### Backend
@@ -372,13 +374,6 @@ pytest
 # Добавьте 100+ сайтов и проверьте работу воркеров
 ```
 
-## 📈 Производительность
-
-- **1 Worker (concurrency=4)**: ~240 проверок/минуту
-- **4 Workers (concurrency=4)**: ~1000 проверок/минуту
-- **RAM Usage**: ~500MB (все сервисы)
-- **Database**: Оптимизировано индексами
-
 ## 🛡 Безопасность
 
 - ✅ JWT токены с истечением
@@ -399,35 +394,6 @@ make restart       # Перезапустить
 make rebuild-up    # Пересобрать и запустить
 ```
 
-## 🐛 Troubleshooting
-
-### Проблема: Celery не запускается
-
-```bash
-# Проверить Redis
-docker exec -it website_monitor_redis redis-cli ping
-
-# Перезапустить воркер
-docker-compose restart celery_worker celery_beat
-```
-
-### Проблема: Миграции не применяются
-
-```bash
-# Удалить volume и пересоздать
-docker-compose down -v
-docker-compose up -d postgres
-docker exec -it website_monitor_backend bash
-cd backend && alembic upgrade head
-```
-
-### Проблема: Frontend не подключается к Backend
-
-Проверить CORS в `.env`:
-```env
-BACKEND_CORS_ORIGINS=["http://localhost:8080"]
-```
-
 ## 📚 Технологии
 
 ### Backend
@@ -439,7 +405,7 @@ BACKEND_CORS_ORIGINS=["http://localhost:8080"]
 - **Redis** - Broker & result backend
 - **Pydantic** - Validation
 - **JWT** - Authentication
-- **httpx** - HTTP client
+- **curl-cffi** - HTTP client
 
 ### Frontend
 - **Vue.js 3** - Progressive framework
@@ -449,13 +415,6 @@ BACKEND_CORS_ORIGINS=["http://localhost:8080"]
 ## 🎯 TODO / Roadmap
 
 - [ ] Flower dashboard для мониторинга Celery
-- [ ] WebSocket для real-time обновлений
-- [ ] Email уведомления
-- [ ] Webhook поддержка
-- [ ] Графики uptime (Chart.js)
-- [ ] Export отчётов (PDF/CSV)
-- [ ] Multi-location checks
-- [ ] SSL certificate monitoring
 - [ ] Custom headers support
 - [ ] Rate limiting
 - [ ] Unit & Integration tests
@@ -467,8 +426,8 @@ MIT
 
 ## 👥 Автор
 
-Ваше имя - [GitHub](https://github.com/yourusername)
+[GitHub](https://github.com/yourusername)
 
 ---
 
-**Нужна помощь?** Создайте Issue или напишите в Telegram: @yourtelegram
+**Нужна помощь?** Напишите в Telegram: @gresaggr
